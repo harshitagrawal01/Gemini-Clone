@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 
 const Main = ({ savedChats = [], setSavedChats, }) => {
     const [input, setInput] = useState("");
-    const [messages, setMessages] = useState([]); // chat currently displayed
+    const [messages, setMessages] = useState([]); // displaying current chat
     const [loading, setLoading] = useState(false);
     const [showCards, setShowCards] = useState(true);
     const [typingText, setTypingText] = useState("");
@@ -65,10 +65,9 @@ const Main = ({ savedChats = [], setSavedChats, }) => {
         return () => window.removeEventListener("loadSavedChat", handler);
     }, []);
 
-    // helper: save a completed chat entry into savedChats (auto-save)
-    // ---------------------------------------------------------
+    
     // AUTO SAVE CHAT – FINAL WORKING VERSION (NO DUPLICATION)
-    // ---------------------------------------------------------
+    
     const autoSaveChat = (prompt, response) => {
         const saved = JSON.parse(localStorage.getItem("savedChats")) || [];
 
@@ -92,7 +91,7 @@ const Main = ({ savedChats = [], setSavedChats, }) => {
 
         const updated = [newChat, ...saved];
 
-        // UPDATE ONLY LOCAL STORAGE — DO NOT UPDATE setSavedChats() here
+        
         localStorage.setItem("savedChats", JSON.stringify(updated));
 
         // tell App.jsx that a new chat was saved
