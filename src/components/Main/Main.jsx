@@ -265,12 +265,12 @@ const Main = ({ savedChats = [], setSavedChats, }) => {
                         <div>
                             <img src={assets.gallery_icon} alt="" />
                             <img src={assets.mic_icon} alt="" />
-                            <img
+                            {input?<img
                                 onClick={handleSend}
                                 style={{ cursor: "pointer" }}
                                 src={assets.send_icon}
                                 alt="send"
-                            />
+                            />:null}
                         </div>
                     </div>
 
