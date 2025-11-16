@@ -13,7 +13,7 @@ const Main = ({ savedChats = [], setSavedChats, }) => {
 
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     const genAI = new GoogleGenerativeAI(apiKey);
-    
+
 
     const model = genAI.getGenerativeModel({
         model: "gemini-2.0-flash",
@@ -65,9 +65,9 @@ const Main = ({ savedChats = [], setSavedChats, }) => {
         return () => window.removeEventListener("loadSavedChat", handler);
     }, []);
 
-    
+
     // AUTO SAVE CHAT – FINAL WORKING VERSION (NO DUPLICATION)
-    
+
     const autoSaveChat = (prompt, response) => {
         const saved = JSON.parse(localStorage.getItem("savedChats")) || [];
 
@@ -91,7 +91,7 @@ const Main = ({ savedChats = [], setSavedChats, }) => {
 
         const updated = [newChat, ...saved];
 
-        
+
         localStorage.setItem("savedChats", JSON.stringify(updated));
 
         // tell App.jsx that a new chat was saved
@@ -258,19 +258,25 @@ const Main = ({ savedChats = [], setSavedChats, }) => {
                         <input
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    e.preventDefault(); // stops page refresh in production
+                                    handleSend();
+                                }
+                            }}
+
                             type="text"
                             placeholder="Enter a prompt here"
                         />
                         <div>
                             <img src={assets.gallery_icon} alt="" />
                             <img src={assets.mic_icon} alt="" />
-                            {input?<img
+                            {input ? <img
                                 onClick={handleSend}
                                 style={{ cursor: "pointer" }}
                                 src={assets.send_icon}
                                 alt="send"
-                            />:null}
+                            /> : null}
                         </div>
                     </div>
 
