@@ -183,21 +183,28 @@
 }
 
 .chat-text {
-  background: #f3f3f3;
-  padding: 10px 14px;
-  border-radius: 14px;
-  max-width: 70%;
-  line-height: 1.5;
-  font-size: 0.95rem;
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 16px;
+  max-width: 75%;
+  line-height: 1.55;
+  font-size: 0.97rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eaeaea;
 }
+
 
 .user-message .chat-text {
-  background: #d7ebff;
+  background: #d9eaff;
+  border: 1px solid #c6ddff;
 }
 
+
 .ai-message .chat-text {
-  background: #f8f8f8;
+  background: #f7f7f7;
+  border: 1px solid #ededed;
 }
+
 
 /* Loader animation */
 .loader {
