@@ -173,8 +173,8 @@
 .chat-message {
   display: flex;
   align-items: flex-start;
-  gap: 8px;             /* smaller gap */
-  margin-bottom: 6px;   /* slight space between messages */
+  gap: 10px;             /* smaller gap */
+  margin: 10px 0;   /* slight space between messages */
 }
 
 .chat-message.user-message {
