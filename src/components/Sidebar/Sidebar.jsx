@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react'
 import './Sidebar.css'
 import { assets } from '../../assets/assets'
 
-const Sidebar = ({ savedChats = [], onLoadChat }) => {
-    const [extended, setExtended] = useState(false)
+const Sidebar = ({ savedChats = [], onLoadChat, isOpen, toggleSidebar }) => {
+    const [extended, setExtended] = useState(false);
     const [localSaved, setLocalSaved] = useState([]);
 
     useEffect(() => {
@@ -11,9 +11,16 @@ const Sidebar = ({ savedChats = [], onLoadChat }) => {
     }, [savedChats]);
 
     return (
-        <div className='sidebar'>
+        <div className={`sidebar ${isOpen ? "active" : ""}`}>
             <div className="top">
-                <img onClick={() => setExtended(prev => !prev)} className='menu' src={assets.menu_icon} alt="" />
+                {/* 🍔 Menu button toggles sidebar on mobile */}
+                <img 
+                    onClick={toggleSidebar} 
+                    className='menu' 
+                    src={assets.menu_icon} 
+                    alt="" 
+                />
+
                 <div className="new-chat">
                     <img src={assets.plus_icon} alt="" />
                     {extended ? <p>New Chat</p> : null}
@@ -33,16 +40,17 @@ const Sidebar = ({ savedChats = [], onLoadChat }) => {
                                 <div
                                     key={idx}
                                     className="recent-entry"
-                                    onClick={() => onLoadChat(item)}
-                                    style={{ cursor: "pointer" }}
+                                    onClick={() => {
+                                        onLoadChat(item);
+                                        toggleSidebar(); // close sidebar after selecting
+                                    }}
                                 >
                                     <img src={assets.message_icon} alt="" />
                                     <p>{(item.prompt || "").slice(0, 30)}{(item.prompt && item.prompt.length > 30) ? "..." : ""}</p>
                                 </div>
-
                             ))
-
                         )}
+
                         <button
                             className="delete-btn"
                             onClick={() => {
@@ -76,4 +84,5 @@ const Sidebar = ({ savedChats = [], onLoadChat }) => {
 }
 
 export default Sidebar
+
 
