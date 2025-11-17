@@ -86,19 +86,6 @@
 
 @media(max-width:600px){
     .sidebar{
-        position: fixed;
-        left: -260px;
-        top: 0;
-        height: 100vh;
-        width: 240px;
-        background-color: #f0f4f9;
-        transition: 0.3s;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .sidebar .active{
-        left: 0;
+        display: none;
     }
 }
