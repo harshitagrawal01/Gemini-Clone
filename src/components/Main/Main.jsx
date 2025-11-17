@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from "react";
 import "./Main.css";
 import { assets } from "../../assets/assets";
-import { GoogleGenerativeAI } from "@google-generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import ReactMarkdown from "react-markdown";
 
-const Main = ({ savedChats = [], setSavedChats }) => {
+const Main = ({ savedChats = [], setSavedChats, }) => {
     const [input, setInput] = useState("");
-    const [messages, setMessages] = useState([]); 
+    const [messages, setMessages] = useState([]); // displaying current chat
     const [loading, setLoading] = useState(false);
     const [showCards, setShowCards] = useState(true);
     const [typingText, setTypingText] = useState("");
 
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     const genAI = new GoogleGenerativeAI(apiKey);
+
 
     const model = genAI.getGenerativeModel({
         model: "gemini-2.0-flash",
@@ -22,29 +23,23 @@ const Main = ({ savedChats = [], setSavedChats }) => {
         },
     });
 
-    // --- REFRESH FIX (show first page like localhost) ---
+    // --- Load last current chat from localStorage on mount ---
     useEffect(() => {
         const raw = localStorage.getItem("currentChat");
-
-        // Reset to first page
-        setMessages([]);
-        setTypingText("");
-        setInput("");
-        setShowCards(true);
-
-        // Only load old chat if available
         if (raw) {
             try {
                 const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed) && parsed.length > 0) {
+                if (Array.isArray(parsed)) {
                     setMessages(parsed);
-                    setShowCards(false);
+                    setShowCards(parsed.length === 0);
                 }
-            } catch (_) {}
+            } catch (e) {
+                // ignore parse errors
+            }
         }
     }, []);
 
-    // --- Persist current chat ---
+    // --- Persist current chat whenever messages change ---
     useEffect(() => {
         localStorage.setItem("currentChat", JSON.stringify(messages));
     }, [messages]);
@@ -54,32 +49,34 @@ const Main = ({ savedChats = [], setSavedChats }) => {
         const handler = (e) => {
             const item = e.detail;
             if (!item) return;
-
+            // load the saved chat (no API call)
             setShowCards(false);
             if (item.chat && Array.isArray(item.chat)) {
                 setMessages(item.chat);
             } else {
+                // fallback: show prompt/response as two messages
                 const arr = [];
                 if (item.prompt) arr.push({ role: "user", text: item.prompt });
                 if (item.response) arr.push({ role: "gemini", text: item.response });
                 setMessages(arr);
             }
         };
-
         window.addEventListener("loadSavedChat", handler);
         return () => window.removeEventListener("loadSavedChat", handler);
     }, []);
 
-    // AUTO SAVE CHAT – NO DUPLICATION
+
+    // AUTO SAVE CHAT – FINAL WORKING VERSION (NO DUPLICATION)
+
     const autoSaveChat = (prompt, response) => {
         const saved = JSON.parse(localStorage.getItem("savedChats")) || [];
 
+        // Check if exact prompt already saved
         const exists = saved.some(
-            (chat) =>
-                chat.prompt.trim().toLowerCase() === prompt.trim().toLowerCase()
+            (chat) => chat.prompt.trim().toLowerCase() === prompt.trim().toLowerCase()
         );
 
-        if (exists) return;
+        if (exists) return; // prevent duplicates
 
         const newChat = {
             id: Date.now(),
@@ -87,25 +84,29 @@ const Main = ({ savedChats = [], setSavedChats }) => {
             response,
             chat: [
                 { role: "user", text: prompt },
-                { role: "gemini", text: response },
+                { role: "gemini", text: response }
             ],
-            timestamp: new Date().toISOString(),
+            timestamp: new Date().toISOString()
         };
 
         const updated = [newChat, ...saved];
 
+
         localStorage.setItem("savedChats", JSON.stringify(updated));
 
+        // tell App.jsx that a new chat was saved
         window.dispatchEvent(
             new CustomEvent("savedChatsUpdated", { detail: updated })
         );
     };
 
+
+
     const handleSend = async () => {
         if (!input.trim()) return;
 
         setShowCards(false);
-        const userPromptText = input;
+        const userPromptText = input; // capture before clearing
         const userMessage = { role: "user", text: userPromptText };
         setMessages((prev) => [...prev, userMessage]);
         setInput("");
@@ -120,10 +121,11 @@ const Main = ({ savedChats = [], setSavedChats }) => {
                 })),
             });
 
+
             const result = await chat.sendMessage(userPromptText);
             const text = result.response.text();
 
-            // Typing animation
+            // Typing animation effect
             let index = 0;
             setTypingText("");
             const interval = setInterval(() => {
@@ -131,16 +133,17 @@ const Main = ({ savedChats = [], setSavedChats }) => {
                 index++;
                 if (index > text.length) {
                     clearInterval(interval);
-
+                    // add final AI message
                     const aiMessage = { role: "gemini", text };
                     setMessages((prev) => {
                         const newMessages = [...prev, aiMessage];
+                        // auto-save this completed chat
                         autoSaveChat(userPromptText, text, newMessages);
                         return newMessages;
                     });
                     setTypingText("");
                 }
-            }, 20);
+            }, 20); // typing speed
         } catch (error) {
             console.error(error);
             setMessages((prev) => [
@@ -154,6 +157,7 @@ const Main = ({ savedChats = [], setSavedChats }) => {
 
     return (
         <div className="main">
+            {/* Navbar */}
             <div className="nav">
                 <p>Gemini</p>
                 <img src={assets.user_icon} alt="" />
@@ -170,64 +174,37 @@ const Main = ({ savedChats = [], setSavedChats }) => {
                         </div>
 
                         <div className="cards">
-                            <div
-                                className="card"
-                                onClick={() =>
-                                    setInput(
-                                        "Suggest beautiful places to see on an upcoming road trip"
-                                    )
-                                }
-                            >
+                            <div className="card" onClick={() => setInput("Suggest beautiful places to see on an upcoming road trip")}>
                                 <p>Suggest beautiful places to see on an upcoming road trip</p>
                                 <img src={assets.compass_icon} alt="" />
                             </div>
 
-                            <div
-                                className="card"
-                                onClick={() =>
-                                    setInput(
-                                        "Briefly summarise this concept: urban planning "
-                                    )
-                                }
-                            >
+                            <div className="card" onClick={() => setInput("Briefly summarise this concept: urban planning ")}>
                                 <p>Briefly summarise this concept: urban planning</p>
                                 <img src={assets.bulb_icon} alt="" />
                             </div>
 
-                            <div
-                                className="card"
-                                onClick={() =>
-                                    setInput(
-                                        "Brainstorm team bonding activities for our work retreat"
-                                    )
-                                }
-                            >
+                            <div className="card" onClick={() => setInput("Brainstorm team bonding activities for our work retreat")}>
                                 <p>Brainstorm team bonding activities for our work retreat</p>
                                 <img src={assets.message_icon} alt="" />
                             </div>
 
-                            <div
-                                className="card"
-                                onClick={() =>
-                                    setInput(
-                                        "Improve the readability of the following code"
-                                    )
-                                }
-                            >
+                            <div className="card" onClick={() => setInput("Improve the readability of the following code")}>
                                 <p>Improve the readability of the following code</p>
                                 <img src={assets.code_icon} alt="" />
                             </div>
+
                         </div>
                     </>
                 )}
 
+                {/* Chat area */}
                 <div className="chat-area">
                     {messages.map((msg, index) => (
                         <div
                             key={index}
-                            className={`chat-message ${
-                                msg.role === "user" ? "user-message" : "ai-message"
-                            }`}
+                            className={`chat-message ${msg.role === "user" ? "user-message" : "ai-message"
+                                }`}
                         >
                             <img
                                 src={
@@ -244,6 +221,7 @@ const Main = ({ savedChats = [], setSavedChats }) => {
                         </div>
                     ))}
 
+                    {/* Loader while waiting */}
                     {loading && !typingText && (
                         <div className="ai-message">
                             <img
@@ -259,6 +237,7 @@ const Main = ({ savedChats = [], setSavedChats }) => {
                         </div>
                     )}
 
+                    {/* Typing effect while generating response */}
                     {typingText && (
                         <div className="ai-message">
                             <img
@@ -273,6 +252,7 @@ const Main = ({ savedChats = [], setSavedChats }) => {
                     )}
                 </div>
 
+                {/* Input area */}
                 <div className="main-bottom">
                     <div className="search-box">
                         <input
@@ -280,24 +260,23 @@ const Main = ({ savedChats = [], setSavedChats }) => {
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
-                                    e.preventDefault(); 
+                                    e.preventDefault(); // stops page refresh in production
                                     handleSend();
                                 }
                             }}
+
                             type="text"
                             placeholder="Enter a prompt here"
                         />
                         <div>
                             <img src={assets.gallery_icon} alt="" />
                             <img src={assets.mic_icon} alt="" />
-                            {input ? (
-                                <img
-                                    onClick={handleSend}
-                                    style={{ cursor: "pointer" }}
-                                    src={assets.send_icon}
-                                    alt="send"
-                                />
-                            ) : null}
+                            {input ? <img
+                                onClick={handleSend}
+                                style={{ cursor: "pointer" }}
+                                src={assets.send_icon}
+                                alt="send"
+                            /> : null}
                         </div>
                     </div>
 
@@ -312,7 +291,6 @@ const Main = ({ savedChats = [], setSavedChats }) => {
 };
 
 export default Main;
-
 
 
 
