@@ -4,6 +4,9 @@ import { assets } from "../../assets/assets";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import ReactMarkdown from "react-markdown";
 
+localStorage.removeItem("currentChat");
+
+
 const Main = ({ savedChats = [], setSavedChats, }) => {
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState([]); // displaying current chat
